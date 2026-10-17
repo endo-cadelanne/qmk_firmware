@@ -32,11 +32,12 @@ uint16_t rightwheel_current_position = 0;
 uint32_t last_scroll_time = 0;
 
 /* Layer lighting, used to blink when making gestures. */
-const rgblight_segment_t PROGMEM righty_nav_layer_colour[] =        RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_NAVBLUE} );
+const rgblight_segment_t PROGMEM righty_nav_layer_colour[] =        RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_ORANGE} );
 const rgblight_segment_t PROGMEM lefty_nav_layer_colour[] =         RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_NAVGREEN} );
 const rgblight_segment_t PROGMEM control_layer_colour[] =           RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_RED} );
-const rgblight_segment_t PROGMEM gesture_layer_colour[] =           RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_GESTUREYELLOW} );
-const rgblight_segment_t PROGMEM option_changed_layer_colour[] =    RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_OPTIONCHANGED} );
+const rgblight_segment_t PROGMEM gesture_layer_colour[] =           RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_BLUE} );
+const rgblight_segment_t PROGMEM option_changed_layer_colour[] =    RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_CYAN} );
+const rgblight_segment_t PROGMEM gesture_confirm_colour[] =         RGBLIGHT_LAYER_SEGMENTS( {0, 2, HSV_PURPLE});
 
 /* Lighting layer definitions. Later layers take precedence, so these
    are defined in the order that they will be displayed in. */
@@ -45,7 +46,8 @@ const rgblight_segment_t* const PROGMEM my_rgb_layers[] = RGBLIGHT_LAYERS_LIST(
     lefty_nav_layer_colour,
     control_layer_colour,
     gesture_layer_colour,
-    option_changed_layer_colour
+    option_changed_layer_colour,
+    gesture_confirm_colour
 );
 
 /* Colour layer names. */
@@ -54,10 +56,11 @@ enum {
     LEFTY_NAV_LAYER_COLOUR,
     CONTROL_LAYER_COLOUR,
     GESTURE_LAYER_COLOUR,
-    OPTION_CHANGED_LAYER_COLOUR    
+    OPTION_CHANGED_LAYER_COLOUR,
+    GESTURE_CONFIRM_COLOUR
 };
 
- /* EEPROM memory for the various persistent states that the A+ can have. 
+ /* EEPROM memory for the various persistent states that the A+ can have.
     See eeconfig_init_user() for default values and meanings. */
 typedef union {
   uint32_t raw;
@@ -94,7 +97,7 @@ enum {
 /* Override default function in submodule code so that we can blink whenever
    a successful gesture is registered. */
 void pointing_device_gestures_trigger(uint8_t direction) {
-    
+
     /* Directions are numbered off 0-7, starting with east. */
     switch( direction ) {
         case 0: /* East, Next Virtual Desktop. */
@@ -159,7 +162,7 @@ void pointing_device_gestures_trigger(uint8_t direction) {
     }
 
     /* Flash light to indicate successful gesture processing. */
-    rgblight_blink_layer(OPTION_CHANGED_LAYER_COLOUR, OPTION_CHANGE_BLINK_TIMEOUT*2);
+    rgblight_blink_layer(GESTURE_CONFIRM_COLOUR, OPTION_CHANGE_BLINK_TIMEOUT*2);
 }
 
 /* Mouse gestures keymap. Since we cannot use custom keycodes in this array and
@@ -172,16 +175,16 @@ const uint16_t PROGMEM pointing_device_gestures[NUM_GESTURE_DIRECTIONS] =
 /* Keymap. */
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base layer with all of the mouse-related stuff for everyday use.
-    [LAYER_NAV_RIGHT_HANDED] = LAYOUT(  MS_BTN4, MS_BTN5, PKC_DRAG_SCROLL, MS_BTN2, 
-                                        MS_BTN1, MS_BTN3, 
+    [LAYER_NAV_RIGHT_HANDED] = LAYOUT(  MS_BTN4, MS_BTN5, PKC_DRAG_SCROLL, MS_BTN3,
+                                        MS_BTN1, MS_BTN2,
                                         PKC_GESTURE, TG(LAYER_CONTROL) ),
     // Mirror-image of right-handed layout for lefties.
-    [LAYER_NAV_LEFT_HANDED] = LAYOUT(   MS_BTN2, PKC_DRAG_SCROLL, MS_BTN4, MS_BTN5, 
-                                        MS_BTN3, MS_BTN1, 
+    [LAYER_NAV_LEFT_HANDED] = LAYOUT(   MS_BTN2, PKC_DRAG_SCROLL, MS_BTN4, MS_BTN5,
+                                        MS_BTN3, MS_BTN1,
                                         TG(LAYER_CONTROL), PKC_GESTURE ),
     // Layer for all of the customization options.
     [LAYER_CONTROL] = LAYOUT(           PKC_BLINKY_DPI_CONFIG, PKC_ADJUST_LED_BRIGHTNESS, PKC_TGL_VERT_SCRL, PKC_TGL_HORIZ_SCRL,
-                                        PKC_TGL_MIRROR, PKC_TGL_DRAG_SCRL, 
+                                        PKC_TGL_MIRROR, PKC_TGL_DRAG_SCRL,
                                         TG(LAYER_CONTROL), TG(LAYER_CONTROL) ),
     [3] = LAYOUT( _______, _______, _______, _______, _______, _______, _______, _______ ),
     [4] = LAYOUT( _______, _______, _______, _______, _______, _______, _______, _______ ),
@@ -196,9 +199,9 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
         case LAYER_NAV_RIGHT_HANDED:
             rgblight_set_layer_state(RIGHTY_NAV_LAYER_COLOUR, true);
-            
+
             rgblight_set_layer_state(LEFTY_NAV_LAYER_COLOUR, false);
-            rgblight_set_layer_state(CONTROL_LAYER_COLOUR, false);            
+            rgblight_set_layer_state(CONTROL_LAYER_COLOUR, false);
 
             dprintf("change layer: right-handed nav\n");
             break;
@@ -206,15 +209,15 @@ layer_state_t layer_state_set_user(layer_state_t state) {
             rgblight_set_layer_state(LEFTY_NAV_LAYER_COLOUR, true);
 
             rgblight_set_layer_state(RIGHTY_NAV_LAYER_COLOUR, false);
-            rgblight_set_layer_state(CONTROL_LAYER_COLOUR, false);  
+            rgblight_set_layer_state(CONTROL_LAYER_COLOUR, false);
 
             dprintf("change layer: left-handed nav\n");
             break;
         case LAYER_CONTROL:
             rgblight_set_layer_state(CONTROL_LAYER_COLOUR, true);
-            
+
             rgblight_set_layer_state(RIGHTY_NAV_LAYER_COLOUR, false);
-            rgblight_set_layer_state(LEFTY_NAV_LAYER_COLOUR, false); 
+            rgblight_set_layer_state(LEFTY_NAV_LAYER_COLOUR, false);
 
             dprintf("change layer: control\n");
             break;
@@ -305,7 +308,7 @@ void keyboard_post_init_user(void) {
 
     /* Set an initial colour to establish a baseline brightness for the RGB layers. */
     rgblight_sethsv(0, 0, RGBLIGHT_VAL_STEP * user_config.led_brightness);
-}  
+}
 
 bool process_record_user(uint16_t keycode, keyrecord_t* record) {
     switch (keycode) {
@@ -384,7 +387,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t* record) {
                 pointing_device_gestures_end();
                 rgblight_set_layer_state(GESTURE_LAYER_COLOUR, false);
             }
-            return true; 
+            return true;
         case PKC_DRAG_SCROLL:
             if( user_config.drag_scroll_mode ) {
                 if (record->event.pressed) {
@@ -397,7 +400,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t* record) {
             }
             return true;
         case PKC_ADJUST_LED_BRIGHTNESS:
-            /* Increase brightness in RGBLIGHT_VAL_STEP steps. 
+            /* Increase brightness in RGBLIGHT_VAL_STEP steps.
                Go to minimum brightness if the max brightness is hit. */
             if (record->event.pressed) {
                 if( rgblight_get_val() >= RGBLIGHT_VAL_STEP * 4 ) {
@@ -423,7 +426,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t* record) {
                 dprintf("DPI changed. Current DPI = %d\n", dpi_array[keyboard_config.dpi_config]);
                 rgblight_blink_layer_repeat(OPTION_CHANGED_LAYER_COLOUR, OPTION_CHANGE_BLINK_TIMEOUT, keyboard_config.dpi_config + 1);
             }
-            return true;         
+            return true;
         default:
             return true;
     }
@@ -457,9 +460,9 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         int16_t rightwheel_delta = calculate_wheel_delta( rightwheel_rawangle, rightwheel_current_position );
         rightwheel_current_position = rightwheel_rawangle;
 
-        /* If either wheel moved, we reset the timeout counter. Else, we start 
+        /* If either wheel moved, we reset the timeout counter. Else, we start
            counting inactivity. */
-        if( abs(leftwheel_delta) > 2 ) { 
+        if( abs(leftwheel_delta) > 2 ) {
             leftwheel_timeout = 0;
         }
         else {
@@ -468,8 +471,8 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 leftwheel_timeout += timer_elapsed32(last_scroll_time);
             }
         }
-        if( abs(rightwheel_delta) > 2 ) { 
-            rightwheel_timeout = 0; 
+        if( abs(rightwheel_delta) > 2 ) {
+            rightwheel_timeout = 0;
         }
         else {
             /* Don't increment forever, you'll get rollover. */
@@ -483,21 +486,21 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 
         /* If either of the wheels times out, we move the deadzone window to
            where the position is. This prevents spurious scroll events. */
-        if( leftwheel_timeout >= TMAG5273_DEADZONE_PROTECTOR_TIMEOUT && 
+        if( leftwheel_timeout >= TMAG5273_DEADZONE_PROTECTOR_TIMEOUT &&
             leftwheel_timeout < TMAG5273_DEADZONE_PROTECTOR_TIMEOUT * 2 ) {
 
             leftwheel_deadzone_center = leftwheel_current_position;
             dprintf("Left wheel timeout, deadzone moved to: %d\n", leftwheel_deadzone_center);
-            
+
             /* Set the timeout to a large number so that we only shift the window once. */
             leftwheel_timeout = TMAG5273_DEADZONE_PROTECTOR_TIMEOUT * 4;
         }
-        if( rightwheel_timeout >= TMAG5273_DEADZONE_PROTECTOR_TIMEOUT && 
+        if( rightwheel_timeout >= TMAG5273_DEADZONE_PROTECTOR_TIMEOUT &&
             rightwheel_timeout < TMAG5273_DEADZONE_PROTECTOR_TIMEOUT * 2 ) {
 
             rightwheel_deadzone_center = rightwheel_current_position;
             dprintf("Right wheel timeout, deadzone moved to: %d\n", rightwheel_deadzone_center);
-            
+
             /* Set the timeout to a large number so that we only shift the window once. */
             rightwheel_timeout = TMAG5273_DEADZONE_PROTECTOR_TIMEOUT * 4;
         }
@@ -530,7 +533,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
             return mouse_report;
         }
 
-        /* If scroll arrow mode is activated for horizontal scrolling, then we do that. 
+        /* If scroll arrow mode is activated for horizontal scrolling, then we do that.
            This behaviour is the same across OSes. */
         if( user_config.horizontal_scroll_arrows ) {
 
@@ -564,7 +567,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
             }
         }
 
-        /* If scroll arrow mode is activated for vertical scrolling, then we do that. 
+        /* If scroll arrow mode is activated for vertical scrolling, then we do that.
            This behaviour is the same across OSes. */
         if( user_config.vertical_scroll_arrows ) {
 
@@ -599,7 +602,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 
         /* If we're on Windows or Linux, send hi-res scroll events. */
         if ( (detected_host_os() == OS_WINDOWS || detected_host_os() == OS_LINUX) ) {
-            
+
             if ( leftwheel_deadzone_distance > (TMAG5273_WHEEL_DEADZONE - 10) ||
                  leftwheel_deadzone_distance < (-TMAG5273_WHEEL_DEADZONE + 10)) {
 
@@ -607,7 +610,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                     if( !user_config.horizontal_scroll_arrows ) {
                         mouse_report.h = leftwheel_delta / TMAG5273_HORIZONAL_WHEEL_SPEED_DIV;
                     }
-                    
+
                 }
                 else {
                     mouse_report.v = -leftwheel_delta / TMAG5273_VERTICAL_WHEEL_SPEED_DIV;
@@ -684,7 +687,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
             }
         }
 
-        /* Set scroll data to zero if the corresponding button is 
+        /* Set scroll data to zero if the corresponding button is
            currently being held down. */
 
         /* Check left knob. */

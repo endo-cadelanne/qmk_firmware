@@ -21,9 +21,9 @@
 #define UNUSABLE_PINS \
     { GP6, GP10, GP16, GP18, GP19, GP20, GP22, GP24, GP25, GP26, GP28 }
 
-#define POINTING_DEVICE_HIRES_SCROLL_ENABLE
-#define POINTING_DEVICE_HIRES_SCROLL_MULTIPLIER 120
-#define POINTING_DEVICE_HIRES_SCROLL_EXPONENT 0
+//#define POINTING_DEVICE_HIRES_SCROLL_ENABLE
+//#define POINTING_DEVICE_HIRES_SCROLL_MULTIPLIER 120
+//#define POINTING_DEVICE_HIRES_SCROLL_EXPONENT 0
 
 #define POINTING_DEVICE_INVERT_Y
 
@@ -41,7 +41,7 @@
 
 #define PLOOPY_DRAGSCROLL_MOMENTARY
 #define PLOOPY_DRAGSCROLL_DIVISOR_H 1.0
-#define PLOOPY_DRAGSCROLL_DIVISOR_V 0.3
+#define PLOOPY_DRAGSCROLL_DIVISOR_V 1.0
 #define PLOOPY_DRAGSCROLL_INVERT
 
 /* PMW3360 Settings */
@@ -63,7 +63,7 @@
 
 #define RGBLIGHT_SLEEP
 #define RGBLIGHT_LAYERS_RETAIN_VAL
-/* On-board lighting is configurable in 4 steps. This variable configures 
+/* On-board lighting is configurable in 4 steps. This variable configures
    the step size in fractions of full brightness (out of 255). */
 #define RGBLIGHT_VAL_STEP 63
 #if RGBLIGHT_VAL_STEP > 63
@@ -77,4 +77,4 @@
 #define HSV_OPTIONCHANGED       240, 250, 252
 
 /* How long to blink for when an option-change button is pressed. */
-#define OPTION_CHANGE_BLINK_TIMEOUT 200 
+#define OPTION_CHANGE_BLINK_TIMEOUT 200
